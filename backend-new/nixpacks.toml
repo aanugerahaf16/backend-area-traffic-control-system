@@ -2,4 +2,4 @@
 PHP_VERSION = "8.2"
 
 [phases.setup]
-nixPkgs = ["...", "php83", "php83Extensions.intl", "php83Extensions.zip", "php83Extensions.sockets"]
+nixPkgs = ["...", "php82", "php82Extensions.intl", "php82Extensions.zip", "php82Extensions.sockets"]
