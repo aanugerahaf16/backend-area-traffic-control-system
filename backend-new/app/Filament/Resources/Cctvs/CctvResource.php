@@ -13,22 +13,16 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\ExportAction;
-use App\Filament\Exports\CctvExporter;
-use Filament\Support\Icons\Heroicon;
+
 use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use App\Filament\Resources\Cctvs\Pages\ManageCctvs;
-use Filament\Actions\CreateAction;
+
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Gate;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\DatePicker;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Grid;
 
 class CctvResource extends Resource
 {
@@ -181,26 +175,7 @@ class CctvResource extends Resource
                     })
                     ->visible(fn ($record) => $record !== null),
 
-                Section::make('ATCS (Area Traffic Control System)')
-                    ->description('Record specific dates for your ATCS data history. Metrics are auto-calculated based on this CCTV unit.')
-                    ->schema([
-                        Repeater::make('ATCSHistory')
-                            ->label('ATCS Data History')
-                            ->addActionLabel('Add ATCS History')
-                            ->helperText('Simply select the dates you want to highlight/record. Metrics for these dates will be auto-calculated.')
-                            ->relationship()
-                            ->schema([
-                                DatePicker::make('date')
-                                    ->required()
-                                    ->default(now())
-                                    ->unique(ignorable: fn ($record) => $record),
-                            ])
-                            ->collapsible()
-                            ->cloneable()
-                            ->itemLabel(fn (array $state): ?string => $state['date'] ?? null)
-                            ->columns(1),
-                    ])
-                    ->columnSpanFull(),
+
             ]);
     }
 
@@ -210,6 +185,7 @@ class CctvResource extends Resource
             ->columns([
                 TextColumn::make('position')
                     ->label('ID')
+                    ->weight('bold')
                     ->getStateUsing(function ($record, $rowLoop) {
                         return $rowLoop->iteration;
                     })
@@ -218,45 +194,42 @@ class CctvResource extends Resource
                     ->label('Name')
                     ->searchable()
                     ->alignment('center')
-                    ->weight('bold')
-                    ->color('primary'),
-                TextColumn::make('ATCSHistory.date')
-                    ->label('ATCS Performance Dates')
-                    ->date('d F Y')
-                    ->badge()
-                    ->color('success')
-                    ->separator(', ')
-                    ->wrap()
-                    ->alignment('center')
-                    ->placeholder('No Dates Recorded'),
+                    ->weight('bold'),
                 TextColumn::make('building.name')
                     ->label('Building')
                     ->searchable()
-                    ->alignment('center'),
+                    ->alignment('center')
+                     ->weight('bold'),
                 TextColumn::make('room.name')
                     ->label('Room')
                     ->searchable()
+                     ->weight('bold')
                     ->alignment('center'),
                 TextColumn::make('ip_address')
                     ->label('IP Address')
                     ->searchable()
+                     ->weight('bold')
                     ->alignment('center'),
                 TextColumn::make('ip_rtsp_url')
                     ->label('IP RTSP URL')
                     ->searchable()
+                     ->weight('bold')
                     ->toggleable(isToggledHiddenByDefault: false)
                     ->alignment('center'),
                 TextColumn::make('hls_url')
                     ->label('IP HLS URL')
                     ->searchable()
+                     ->weight('bold')
                     ->toggleable(isToggledHiddenByDefault: false)
                     ->alignment('center'),
                 TextColumn::make('created_at')
                     ->dateTime()
+                     ->weight('bold')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->alignment('center'),
                 TextColumn::make('updated_at')
                     ->dateTime()
+                     ->weight('bold')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->alignment('center'),
             ])

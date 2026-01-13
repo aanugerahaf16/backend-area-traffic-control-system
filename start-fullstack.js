@@ -32,12 +32,28 @@ function startProcess(command, args, cwd, name) {
   return process;
 }
 
-// Start Laravel backend (PHP server) on port 8000
+// Start Laravel backend with Octane (RoadRunner) on port 8000
 const laravelProcess = startProcess(
   'php', 
-  ['artisan', 'serve', '--port=8000'], 
+  ['artisan', 'octane:start', '--port=8000', '--host=127.0.0.1'], 
   path.join(__dirname, 'backend-new'), 
-  'Laravel Backend'
+  'Laravel Octane'
+);
+
+// Start Laravel Reverb (WebSocket Server)
+const reverbProcess = startProcess(
+  'php', 
+  ['artisan', 'reverb:start', '--port=8080', '--host=127.0.0.1'], 
+  path.join(__dirname, 'backend-new'), 
+  'Laravel Reverb'
+);
+
+// Start ATCS Real-Time Data Broadcaster
+const broadcasterProcess = startProcess(
+  'php', 
+  ['artisan', 'atcs:broadcast'], 
+  path.join(__dirname, 'backend-new'), 
+  'ATCS Broadcaster'
 );
 
 // Start Next.js frontend (Next.js dev server) on port 3000
@@ -60,6 +76,8 @@ const streamingProcess = startProcess(
 process.on('SIGINT', () => {
   console.log('\n🛑 Shutting down servers...');
   if (laravelProcess && !laravelProcess.killed) laravelProcess.kill();
+  if (reverbProcess && !reverbProcess.killed) reverbProcess.kill();
+  if (broadcasterProcess && !broadcasterProcess.killed) broadcasterProcess.kill();
   if (nextProcess && !nextProcess.killed) nextProcess.kill();
   if (streamingProcess && !streamingProcess.killed) streamingProcess.kill();
   process.exit(0);
@@ -79,7 +97,7 @@ setTimeout(() => {
   console.log('🌐 Access application at: http://127.0.0.1:8000');
   console.log('📡 Streaming server RTMP available on port 1935');
   console.log('📡 Streaming server HTTP available on port 8001');
-  console.log('📡 Streaming server API available on port 3000');
+  console.log('📡 Streaming server API available on port 3001');
   console.log('🔄 Hot reload is enabled for development');
   console.log('⚠️  Press Ctrl+C to stop all servers\n');
 }, 3000);

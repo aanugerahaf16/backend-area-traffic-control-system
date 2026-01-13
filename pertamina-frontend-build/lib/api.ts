@@ -1,5 +1,5 @@
 // API configuration for the frontend to communicate directly with the backend
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
 
 // Define response wrapper interface
 interface ApiResponse<T> {
@@ -10,16 +10,17 @@ interface ApiResponse<T> {
 
 // Simple in-memory cache for API requests
 const apiCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_TTL = 30000; // 30 seconds
+const CACHE_TTL = 5000; // Reduced to 5 seconds for more real-time feel
 
 // Helper function to make API requests with improved error handling and caching
-export async function api<T>(endpoint: string, options: RequestInit = {}, timeoutMs: number = 10000): Promise<T> {
+export async function api<T>(endpoint: string, options: RequestInit = {}, timeoutMs: number = 30000): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   const method = options.method || 'GET';
   const cacheKey = `${method}:${url}`;
 
   // Check cache for GET requests
-  if (method === 'GET') {
+  const skipCache = (options as any).skipCache || false;
+  if (method === 'GET' && !skipCache) {
     const cached = apiCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
       return cached.data;
@@ -68,8 +69,8 @@ export async function api<T>(endpoint: string, options: RequestInit = {}, timeou
     console.error('API request error:', error);
     // Provide more detailed error information
     if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        throw new Error('API request timeout: The request took too long to complete');
+      if (error.name === 'AbortError' || error.message.includes('timeout')) {
+        throw new Error('API request timeout: The backend is taking too long to respond. Please ensure the Octane server is running.');
       }
       // Re-throw the error to be handled by the calling function
       throw error;
@@ -79,55 +80,69 @@ export async function api<T>(endpoint: string, options: RequestInit = {}, timeou
 }
 
 // Define TypeScript interfaces for API responses
-interface Stats {
+export interface Stats {
   total_buildings: number;
   total_rooms: number;
   total_cctvs: number;
 }
 
-interface Building {
+export interface Building {
   id: string;
   name: string;
   latitude?: string;
   longitude?: string;
-  // Add other building properties as needed
+  rooms?: Room[];
 }
 
-interface Room {
+export interface Room {
   id: string;
   name: string;
   building_id: string;
-  // Add other room properties as needed
+  cctvs?: Cctv[];
 }
 
-interface Cctv {
+export interface Cctv {
   id: string;
   name: string;
   ip_address: string;
   rtsp_url: string;
   room_id: string;
   username?: string;
-  // Add other CCTV properties as needed
+  traffic_volume?: number;
+  efficiency?: number;
+  green_wave_efficiency?: number;
 }
 
-interface ProductionTrend {
-  date: string;
+export interface ProductionTrend {
+  label: string;
   production: number;
-  target: number;
+  traffic_volume: number;
+  green_wave_efficiency: number;
+  average_speed: number;
 }
 
-interface UnitPerformance {
+export interface UnitPerformance {
   unit: string;
   efficiency: number;
+  traffic_density: number;
+  signal_optimization: number;
   capacity: number;
 }
 
-interface StreamData {
+export interface DashboardBundle {
+  stats: Stats;
+  production_trends: ProductionTrend[];
+  unit_performance: UnitPerformance[];
+  buildings: Building[];
+  contacts: Contact[];
+}
+
+export interface StreamData {
   stream_url: string;
   // Add other stream properties as needed
 }
 
-interface Contact {
+export interface Contact {
   id: string;
   email?: string;
   phone?: string;
@@ -136,6 +151,21 @@ interface Contact {
 }
 
 // Specific API methods with proper typing and error handling
+
+/**
+ * Fetch all dashboard data in a single request to reduce backend load
+ * and prevent TimeoutErrors on single-threaded servers.
+ */
+export const getDashboardBundle = async (): Promise<DashboardBundle> => {
+  try {
+    const response = await api<DashboardBundle>('/dashboard-bundle');
+    return response;
+  } catch (error) {
+    console.error('Error fetching dashboard bundle:', error);
+    throw error;
+  }
+};
+
 export const getStats = async (): Promise<Stats> => {
   try {
     const response = await api<Stats>('/stats');
@@ -275,9 +305,24 @@ export const getProductionTrends = async (startDate?: string, endDate?: string):
   }
 };
 
-export const getUnitPerformance = async (): Promise<UnitPerformance[]> => {
+export const getUnitPerformance = async (startDate?: string, endDate?: string): Promise<UnitPerformance[]> => {
   try {
-    const response = await api<UnitPerformance[]>('/unit-performance');
+    let url = '/unit-performance';
+    const queryParams = new URLSearchParams();
+    
+    if (startDate) {
+      queryParams.append('start_date', startDate);
+    }
+    
+    if (endDate) {
+      queryParams.append('end_date', endDate);
+    }
+    
+    if (queryParams.toString()) {
+      url += `?${queryParams.toString()}`;
+    }
+    
+    const response = await api<UnitPerformance[]>(url);
     return response;
   } catch (error) {
     console.error('Error fetching unit performance:', error);

@@ -134,35 +134,67 @@ function MapsPage() {
   }, [showLiveStream, streamData])
 
   // Fetch buildings data
+  const fetchBuildings = useCallback(async (skipLoading = false) => {
+    if (!mounted) return
+    
+    try {
+      if (!skipLoading) setLoading(true)
+      const data = await getBuildings()
+      
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        // Filter out buildings without names or coordinates
+        const validBuildings = data.filter((building: any) => 
+          building.name && building.latitude && building.longitude
+        )
+        
+        setBuildings(validBuildings)
+      } else {
+        setBuildings([])
+      }
+    } catch (error) {
+      console.error('Failed to fetch buildings:', error)
+      setBuildings([])
+    } finally {
+      if (!skipLoading) setLoading(false)
+    }
+  }, [mounted])
+
+  // Initial fetch and Real-time WebSocket listener
   useEffect(() => {
     if (!mounted) return
     
-    const fetchBuildings = async () => {
-      try {
-        setLoading(true)
-        const data = await getBuildings()
-        
-        // Ensure data is an array
-        if (Array.isArray(data)) {
-          // Filter out buildings without names or coordinates
-          const validBuildings = data.filter((building: any) => 
-            building.name && building.latitude && building.longitude
-          )
-          
-          setBuildings(validBuildings)
-        } else {
-          setBuildings([])
-        }
-      } catch (error) {
-        console.error('Failed to fetch buildings:', error)
-        setBuildings([])
-      } finally {
-        setLoading(false)
-      }
-    }
-    
     fetchBuildings()
-  }, [mounted])
+    
+    // WEBSOCKET: Listen for real-time updates on EVERYTHING
+    const loadEcho = async () => {
+      const { initEcho } = await import('@/lib/echo');
+      const echo = initEcho();
+      
+      if (echo) {
+        echo.channel('atcs-global')
+          .listen('.system.update', (payload: any) => {
+            const { buildings: wsBuildings } = payload.data;
+            if (wsBuildings) {
+              // Filter logic same as fetch
+              const validBuildings = wsBuildings.filter((building: any) => 
+                building.name && building.latitude && building.longitude
+              )
+              setBuildings(validBuildings)
+            }
+          });
+      }
+    };
+
+    loadEcho();
+    
+    return () => {
+      import('@/lib/echo').then(({ initEcho }) => {
+        const echo = initEcho();
+        if (echo) echo.leaveChannel('atcs-global');
+      });
+    };
+  }, [mounted, fetchBuildings])
   
   const handleBuildingClick = useCallback((building: any) => {
     // Data is already pre-fetched with rooms and CCTVs from backend

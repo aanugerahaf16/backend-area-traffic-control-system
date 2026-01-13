@@ -1,145 +1,178 @@
-# Pertamina ATCS - Fullstack Monitoring System
+<div align="center">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Pertamina_logo.svg/1200px-Pertamina_logo.svg.png" alt="Pertamina Logo" width="200" />
 
-[![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel)](https://laravel.com)
-[![Next.js](https://img.shields.io/badge/Next.js-15.x-000000?style=for-the-badge&logo=next.js)](https://nextjs.org)
-[![Filament](https://img.shields.io/badge/Filament-v4-FFAD00?style=for-the-badge&logo=filament)](https://filamentphp.com)
-[![Streaming](https://img.shields.io/badge/Streaming-NodeMediaServer-red?style=for-the-badge)](https://github.com/illuspas/Node-Media-Server)
+# 🚦 Pertamina ATCS - Integrated Fullstack Monitoring
 
-A sophisticated, state-of-the-art monitoring and management system for **PT Kilang Pertamina Internasional – Refinery Unit VI Balongan**. This application integrates real-time CCTV streaming, Area Traffic Control System (ATCS) analytics, and infrastructure performance monitoring into a single, cohesive dashboard.
+### **Refinery Unit VI Balongan Monitoring System**
+
+  [![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel)](https://laravel.com)
+  [![Next.js](https://img.shields.io/badge/Next.js-15.x-000000?style=for-the-badge&logo=next.js)](https://nextjs.org)
+  [![Filament](https://img.shields.io/badge/Filament-v4-FFAD00?style=for-the-badge&logo=filament)](https://filamentphp.com)
+  [![Streaming](https://img.shields.io/badge/Streaming-NodeMediaServer-red?style=for-the-badge)](https://github.com/illuspas/Node-Media-Server)
+  [![Tailwind](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com)
 
 ---
 
-## 🏗️ Project Architecture
+**PT Kilang Pertamina Internasional – Refinery Unit VI Balongan**
+*Sistem Monitoring ATCS, Streaming CCTV Real-time, dan Analitik Performa dalam Satu Dashboard Terpadu.*
 
+</div>
+
+---
+
+## 🏗️ Arsitektur Proyek (Hybrid Gateway)
+
+Sistem ini menggunakan arsitektur **Hybrid Proxy**. Laravel bertindak sebagai gerbang tunggal (Single Entry Point) di **Port 8000**, yang melayani Admin Panel secara native dan menyajikan Frontend Next.js secara dinamis melalui teknik Reverse Proxy.
+
+```text
+📂 fullstack-atcs/
+├── 🛡️ backend-new/               # Laravel 12 & Gateway (Port 8000)
+│   ├── app/                      # Business Logic & Proxy Controller
+│   ├── database/                 # Migrations & Analytical Schemas
+│   └── routes/                   # API & Gateway Route Definitions
+├── ⚛️ pertamina-frontend-build/   # UI Next.js 15 (Engine di Port 3000)
+│   ├── app/                      # Modern App Router Pages
+│   └── components/               # High-end Premium Components
+└── 📹 streaming-server/          # Video Engine (Port 8001 & 3001)
+    ├── server.js                 # RTMP to HLS Translation Logic
+    └── ffmpeg/                   # Transcoding Hardware Acceleration
 ```
-.
-├── backend-new/                 # Laravel 12 + Filament v4 Backend (Core API & Admin)
-│   ├── app/                     # Business logic, Models, and Services
-│   ├── database/                # Migrations, Seeders, and Factories
-│   ├── routes/                  # API and Web route definitions
-│   └── public/                  # Assets and entry point
-├── pertamina-frontend-build/    # Next.js 15 Source Code (Modern UI)
-│   ├── app/                     # App Router pages and layouts
-│   ├── components/              # Reusable React components
-│   └── lib/                     # API clients and utilities
-├── streaming-server/            # Node Media Server (CCTV Streaming Engine)
-│   ├── server.js                # RTMP to HLS conversion logic
-│   └── streams/                 # Temporary storage for HLS segments
-└── v0-pertamina-frontend-build/ # (Legacy/Build Mirror)
-```
 
 ---
 
-## 🚀 Core Features
+## 🌟 Fitur Utama
 
-### 🚦 ATCS (Area Traffic Control System)
-*   **Smart Grouping**: Productivity and performance metrics are grouped by **Building & Room**, allowing for area-based analysis rather than just per-unit.
-*   **Performance Trends**: Multi-line charts tracking Traffic Volume, Average Speed, Congestion Index, and Green Wave Efficiency.
-*   **Unit Performance**: Aggregated bar charts showing System Efficiency across different refinery zones.
-*   **Manual Data Priority**: Admin can input real-world data via Filament, which automatically takes precedence over simulated data for high accuracy.
+### 📊 **Analitik ATCS Cerdas**
 
-### 📹 CCTV & Streaming
-*   **Live Monitoring**: Seamless HLS streaming with low latency.
-*   **Conversion Engine**: Automatic RTMP to HLS conversion using FFmpeg on the streaming server.
-*   **Health Status**: Real-time status monitoring (Online/Offline) of CCTV units.
-*   **History Logs**: Record specific performance dates for each CCTV unit via the ATCS History feature.
+* **Hierarchical Grouping**: Data performa dikelompokkan otomatis berdasarkan **Building & Room**.
+* **Predictive Trends**: Visualisasi volume lalu lintas, kecepatan rata-rata, dan indeks kemacetan dengan grafik interaktif Recharts.
+* **Manual Override**: Input data manual via Admin Panel secara otomatis memiliki prioritas di atas data simulasi.
 
-### �️ Interactive Maps
-*   **Geospatial Tracking**: Integrated Leaflet.js map showing locations of Buildings and CCTV units.
-*   **Live Status Tooltips**: Clickable markers with real-time performance and status data.
+### 🎥 **CCTV Real-time & Transcoding**
 
-### 🛠️ Admin Panel (Filament v4)
-*   **Granular Management**: Full CRUD for Buildings, Rooms, and CCTV units.
-*   **ATCS Entry**: Integrated Repeater forms for entering daily/hourly traffic and performance data.
-*   **Role-Based Access**: Secure management interface for refinery operators.
+* **Unified Streaming**: Streaming CCTV fisik (RTSP) dikonversi secara real-time menjadi **HLS (m3u8)** untuk akses web yang ringan dan lancar.
+* **Health Status**: Indikator otomatis Online/Offline untuk setiap titik kamera di lapangan.
+
+### 🗺️ **Interaktif Geospasial**
+
+* **Live Map Integration**: Integrasi peta Leaflet.js dengan marker dinamis yang menunjukkan status unit secara live.
+* **Instant Intelligence**: Tooltip informasi cepat saat marker diklik tanpa perlu reload halaman.
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ Stack Teknologi
 
-| Layer | Technologies |
-| :--- | :--- |
-| **Backend** | Laravel 12, PHP 8.2+, MySQL |
-| **Admin UI** | Filament v4 (TALL Stack) |
-| **Frontend** | Next.js 15, React, TypeScript |
-| **Charts** | Recharts (Responsive & Dynamic) |
-| **Styling** | Tailwind CSS (Modern Glassmorphism Design) |
-| **Maps** | Leaflet.js |
-| **Streaming** | Node.js, NodeMediaServer, FFmpeg |
+* **Core Backend**: [Laravel 12](https://laravel.com) (PHP 8.2+)
+- **Admin Dashboard**: [Filament v4](https://filamentphp.com) (High-speed TALL Stack)
+* **Frontend Engine**: [Next.js 15](https://nextjs.org) (React 19, TypeScript)
+* **Video Engine**: [Node Media Server](https://github.com/illuspas/Node-Media-Server) + [FFmpeg](https://ffmpeg.org/)
+* **Styling**: Tailwind CSS (Premium Glassmorphism & Dark Mode)
 
 ---
 
-## 📦 Installation & Setup
+## 📦 Panduan Instalasi
 
-### 1. Backend Setup
+### 1. Prasyarat Sistem
+
+* **PHP 8.2+** & **MySQL/MariaDB**
+* **Node.js 20+** (LTS)
+* **FFmpeg** (Wajib terpasang di System PATH)
+
+### 2. Langkah Setup
+
 ```bash
+# Clone & Backend Setup
 cd backend-new
 composer install
 cp .env.example .env
-# Configure your DB_DATABASE, DB_USERNAME, etc. in .env
 php artisan key:generate
 php artisan migrate --seed
-# Initial Seeders include: SuperAdminSeeder, RolePermissionSeeder
-```
 
-### 2. Frontend Setup
-```bash
-cd pertamina-frontend-build
+# Frontend Setup
+cd ../pertamina-frontend-build
 npm install
-npm run dev
-```
+cp .env.example .env
 
-### 3. Streaming Server
-```bash
-cd streaming-server
+# Streaming Engine Setup
+cd ../streaming-server
 npm install
-node server.js
 ```
-*Note: Ensure **FFmpeg** is installed on your system and added to your environment PATH.*
 
 ---
 
-## 🌐 Access Points
+## 🌐 Konfigurasi Akses & Port
 
-| Component | URL |
-| :--- | :--- |
-| **Main Dashboard** | [http://127.0.0.1:8000](http://127.0.0.1:8000) |
-| **Admin Panel** | [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin) |
-| **API Backend** | [http://127.0.0.1:8000/api](http://127.0.0.1:8000/api) |
-| **Streaming API** | [http://127.0.0.1:3002/api](http://127.0.0.1:3002/api) |
+Sistem dirancang untuk diakses melalui satu alamat pusat:
 
----
-
-## 🔧 Developer Workflow
-
-### Adding New ATCS Data
-1.  Login to the **Admin Panel**.
-2.  Navigate to **CCTVs**.
-3.  Select a CCTV unit and go to the **ATCS History** section.
-4.  Add a new date entry and fill in the metrics:
-    *   *Traffic Volume*, *Avg Speed*, *Congestion Index*, *Green Wave Eff.*
-5.  Save changes. The frontend charts (**Area Traffic Control System** and **Unit Performance**) will automatically update and aggregate this data based on the CCTV's Room/Building.
-
-### CCTV Stream Configuration
--   Edit a CCTV record and provide the **RTSP URL** from the camera.
--   The system will automatically generate a stream ID (e.g., `cctv-1`).
--   The frontend will request the stream via the Node Media Server at `http://localhost:8000/live/cctv-1/index.m3u8`.
+| Komponen | Alamat Utama | Peran |
+| :--- | :--- | :--- |
+| **🚀 Dashboard Utama** | **[http://127.0.0.1:8000](http://127.0.0.1:8000)** | **Entry Point & UI Hybrid** |
+| **🔐 Panel Administrasi** | **[http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin)** | **Kontrol Data & User** |
+| **🎞️ File Streaming** | `http://localhost:8001/live/...` | HLS Segments |
+| **⚙️ API Kontrol Stream** | `http://localhost:3001` | FFmpeg Controller |
 
 ---
 
-## 📱 Responsive & Premium Design
-This application features a **Premium Glassmorphism UI** optimized for:
--   **Desktop**: For centralized control room monitoring.
--   **Mobile/Tablet**: For engineers on the field (Optimized charts, sliding sidebars, and responsive footers).
+## ⚡ Cara Menjalankan Aplikasi
+
+Aplikasi ini mengandalkan koneksi antar layanan. Agar dashboard utama bisa muncul dengan benar di **[http://127.0.0.1:8000](http://127.0.0.1:8000)**, ikuti urutan berikut:
+
+### **Opsi A: Menggunakan Skrip Otomatis (Direkomendasikan)**
+
+Gunakan skrip orkestrasi di root direktori untuk menghidupkan semua layanan sekaligus:
+
+```bash
+node start-fullstack.js
+```
+
+### **Opsi B: Menjalankan Secara Manual (Langkah demi Langkah)**
+
+Jika ingin menjalankan terminal secara terpisah, **WAJIB** mengikuti urutan ini:
+
+1. **Jalankan Backend (Laravel) - Terminal 1**
+    ```bash
+    cd backend-new
+    php artisan serve
+    ```
+    *Layanan ini harus jalan pertama sebagai pintu masuk utama di port 8000.*
+
+2. **Jalankan Frontend (Next.js) - Terminal 2**
+    ```bash
+    cd pertamina-frontend-build
+    npm run dev
+    ```
+    *Setelah backend jalan, hidupkan UI di port 3000 agar Laravel bisa mengambil kontennya.*
+
+3. **Jalankan Streaming Server - Terminal 3**
+    ```bash
+    cd streaming-server
+    node server.js
+    ```
+    *Layanan ini menyediakan stream video CCTV untuk dashboard.*
+
+> **PENTING:** Setelah semua jalan, akses aplikasi melalui **[http://127.0.0.1:8000](http://127.0.0.1:8000)**. Jangan langsung mengakses port 3000 agar fitur integrasi Laravel-Next.js berfungsi dengan sempurna.
 
 ---
 
-## 🔒 Security & Performance
--   **CORS Protection**: Configured for secure frontend-backend communication.
--   **Service Caching**: Production trends and unit performance calculations are cached to ensure sub-second response times.
--   **Real-time Prioritization**: Manual history inputs always override simulated fallback data.
+## 🔧 Alur Kerja Pengembang (Hybrid Proxy)
+
+Proyek ini menggunakan **Laravel sebagai Gateway**. Saat Anda mengakses `127.0.0.1:8000`:
+
+1. Jika rute adalah `/admin`, Laravel melayani langsung.
+2. Jika rute adalah aset (`.js`, `.css`), Laravel melakukan **redirect** ke port 3000 untuk kecepatan maksimal.
+3. Selain itu, Laravel melakukan **Proxying** konten HTML dari port 3000, sehingga URL tetap terlihat rapi di port 8000.
 
 ---
 
-&copy; 2026 **PT Kilang Pertamina Internasional – Refinery Unit VI Balongan**.  
-All rights reserved.
+## 🔒 Keamanan & Performa
+
+* **Role-Based Access (RBAC)**: Dikelola ketat melalui Filament Shield.
+* **Sub-Second Response**: Data agregat ATCS di-cache untuk performa maksimal.
+* **CORS Hardening**: Konfigurasi keamanan tinggi antara UI dan API Server.
+
+---
+
+<div align="center">
+  <p>&copy; 2026 <b>PT Kilang Pertamina Internasional – Refinery Unit VI Balongan</b></p>
+  <p><i>Sophisticated Monitoring Solutions for Energy Infrastructure.</i></p>
+</div>

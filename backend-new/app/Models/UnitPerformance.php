@@ -30,6 +30,21 @@ class UnitPerformance extends Model
         'capacity' => 'integer',
     ];
 
+        public function building()
+    {
+        return $this->belongsTo(Building::class);
+    }
+
+      public function room()
+    {
+        return $this->belongsTo(room::class);
+    }
+
+    public function cctv()
+    {
+        return $this->belongsTo(Cctv::class);
+    }
+
     // Clear cache when unit performance is created, updated, or deleted
     public static function boot()
     {

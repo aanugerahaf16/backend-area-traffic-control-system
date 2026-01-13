@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -39,6 +40,12 @@ class Cctv extends Model
         'hls_port',
         'ip_rtsp_url',
         'hls_url',
+        'efficiency',
+        'traffic_volume',
+        'average_speed',
+        'congestion_index',
+        'green_wave_efficiency',
+        'target',
     ];
 
     protected $attributes = [
@@ -56,9 +63,14 @@ class Cctv extends Model
         return $this->belongsTo(Room::class);
     }
 
-    public function ATCSHistory(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function AreaTrafficControlSystem(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ProductionTrend::class);
+    }
+
+    public function UnitPerformance(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UnitPerformance::class);
     }
 
     // Clear cache when CCTV is created, updated, or deleted

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import dynamic from 'next/dynamic'
 import Link from "next/link"
 import { getBuildings } from '@/lib/api'
@@ -48,45 +48,61 @@ export default function PlaylistPage() {
     };
   }, []);
 
-  // Load data only once on component mount
+  // Load data with optional skipLoading for background refresh
+  const fetchBuildings = useCallback(async (skipLoading = false) => {
+    try {
+      if (!skipLoading) setLoading(true)
+      const data = await getBuildings()
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setBuildings(data)
+      } else {
+        setBuildings([])
+      }
+    } catch (error) {
+      console.error('Failed to fetch buildings:', error)
+      setBuildings([])
+    } finally {
+      if (!skipLoading) setLoading(false)
+    }
+  }, [])
+
+  // Initial fetch and Real-time WebSocket listener
   useEffect(() => {
     let isMounted = true;
     
-    const fetchBuildings = async () => {
-      try {
-        const data = await getBuildings()
-        // Ensure data is an array
-        if (Array.isArray(data)) {
-          if (isMounted) {
-            setBuildings(data)
-          }
-        } else {
-          if (isMounted) {
-            setBuildings([])
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch buildings:', error)
-        if (isMounted) {
-          setBuildings([])
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false)
-        }
-      }
+    // Initial fetch
+    if (isMounted) {
+      fetchBuildings();
     }
+    
+    // WEBSOCKET: Listen for real-time updates for Playlist
+    const loadEcho = async () => {
+      const { initEcho } = await import('@/lib/echo');
+      const echo = initEcho();
+      
+      if (echo && isMounted) {
+        echo.channel('atcs-global')
+          .listen('.system.update', (payload: any) => {
+            if (!isMounted) return;
+            const { buildings: wsBuildings } = payload.data;
+            if (wsBuildings) {
+              setBuildings(wsBuildings);
+            }
+          });
+      }
+    };
 
-    // Use a small delay to ensure UI is ready before fetching data
-    const timer = setTimeout(() => {
-      fetchBuildings()
-    }, 50);
+    loadEcho();
     
     return () => {
       isMounted = false;
-      clearTimeout(timer);
+      import('@/lib/echo').then(({ initEcho }) => {
+        const echo = initEcho();
+        if (echo) echo.leaveChannel('atcs-global');
+      });
     };
-  }, [])
+  }, [fetchBuildings])
 
   const filteredBuildings = buildings
     .filter((b: any) => b.name && b.name.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -128,7 +144,7 @@ export default function PlaylistPage() {
 
   return (
     // Fixed background gradient to match other pages and ensure full width
-    <main className="bg-gradient-to-br from-blue-950 via-slate-900 to-blue-900 py-8 min-h-screen w-full">
+    <main className="bg-linear-to-br from-blue-950 via-slate-900 to-blue-900 py-8 min-h-screen w-full">
       {/* Header */}
       <div className="pt-4 pb-6 px-4">
         <div className="flex justify-center items-center gap-4">

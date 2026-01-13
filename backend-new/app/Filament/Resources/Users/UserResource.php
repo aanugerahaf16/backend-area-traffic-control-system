@@ -97,12 +97,14 @@ class UserResource extends Resource
             ->columns([
                 TextColumn::make('position')
                     ->label('ID')
+                    ->weight('bold')
                     ->getStateUsing(function ($record, $rowLoop) {
                         return $rowLoop->iteration;
                     })
                     ->alignment('center'),
                 TextColumn::make('name')
                     ->label('Name')
+                    ->weight('bold')
                     ->searchable()
                     ->alignment('center'),
                 ImageColumn::make('avatar_url')
@@ -114,18 +116,22 @@ class UserResource extends Resource
                     ->getStateUsing(fn ($record) => $record->avatar_url ? Storage::url($record->avatar_url) : null),
                 TextColumn::make('username')
                     ->label('Username')
+                    ->weight('bold')
                     ->searchable()
                     ->alignment('center'),
                 TextColumn::make('email')
                     ->label('Email address')
+                    ->weight('bold')
                     ->searchable()
                     ->alignment('center'),
                 TextColumn::make('password')
                     ->label('Password')
+                    ->weight('bold')
                     ->searchable()
                     ->alignment('center'),
                 TextColumn::make('roles.name')
                     ->label('Roles')
+                    ->weight('bold')
                     ->badge()
                     ->separator(',')
                     ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state)))
@@ -133,11 +139,13 @@ class UserResource extends Resource
                     ->alignment('center'),
                 TextColumn::make('created_at')
                     ->label('Created at')
+                    ->weight('bold')
                     ->dateTime()
                     ->alignment('center')
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->label('Updated at')
+                    ->weight('bold')
                     ->dateTime()
                     ->alignment('center')
                     ->toggleable(isToggledHiddenByDefault: true),

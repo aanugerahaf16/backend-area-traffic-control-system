@@ -36,25 +36,50 @@ export default function ContactPage() {
     loadIcons();
   }, []);
 
-  // Load data only once on component mount - no automatic refreshing
+  // Initial fetch and Real-time WebSocket listener
   useEffect(() => {
-    const fetchContacts = async () => {
+    let isMounted = true;
+    
+    // Initial fetch
+    const fetchContactsOnce = async () => {
       try {
         const contactsData = await getContacts()
-        setContacts(contactsData)
+        if (isMounted) setContacts(contactsData)
       } catch (error) {
         console.error('Failed to fetch contacts:', error)
       } finally {
-        setLoading(false)
+        if (isMounted) setLoading(false)
       }
     }
 
-    // Use a small delay to ensure UI is ready before fetching data
-    const timer = setTimeout(() => {
-      fetchContacts()
-    }, 50);
+    fetchContactsOnce();
+
+    // WEBSOCKET: Listen for real-time updates for Contacts
+    const loadEcho = async () => {
+      const { initEcho } = await import('@/lib/echo');
+      const echo = initEcho();
+      
+      if (echo && isMounted) {
+        echo.channel('atcs-global')
+          .listen('.system.update', (payload: any) => {
+            if (!isMounted) return;
+            const { contacts: wsContacts } = payload.data;
+            if (wsContacts) {
+              setContacts(wsContacts);
+            }
+          });
+      }
+    };
+
+    loadEcho();
     
-    return () => clearTimeout(timer);
+    return () => {
+      isMounted = false;
+      import('@/lib/echo').then(({ initEcho }) => {
+        const echo = initEcho();
+        if (echo) echo.leaveChannel('atcs-global');
+      });
+    };
   }, []) // Empty dependency array - only run once on mount
 
   // Function to handle email click - opens Gmail specifically
@@ -93,7 +118,7 @@ export default function ContactPage() {
 
   return (
     // Fixed background gradient to ensure full width and proper height
-    <main className="bg-gradient-to-br from-blue-950 via-slate-900 to-blue-900 py-8 min-h-screen w-full">
+    <main className="bg-linear-to-br from-blue-950 via-slate-900 to-blue-900 py-8 min-h-screen w-full">
       {/* Header */}
       <div className="pt-4 pb-6 px-4">
         <div className="flex justify-center items-center gap-4">

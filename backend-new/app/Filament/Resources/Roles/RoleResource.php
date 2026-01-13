@@ -172,14 +172,23 @@ class RoleResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('position')
+                    ->label('ID')
+                    ->weight('bold')
+                    ->getStateUsing(function ($record, $rowLoop) {
+                        return $rowLoop->iteration;
+                    })
+                    ->alignment('center'),
                 TextColumn::make('name')
                     ->weight(FontWeight::Medium)
                     ->label(__('filament-shield::filament-shield.column.name'))
                     ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state)))
                     ->searchable()
+                     ->weight('bold')
                     ->alignment('center'),
                 TextColumn::make('guard_name')
                     ->badge()
+                     ->weight('bold')
                     ->color('warning')
                     ->label(__('filament-shield::filament-shield.column.guard_name'))
                     ->searchable()
@@ -187,23 +196,27 @@ class RoleResource extends Resource
                 TextColumn::make('team.name')
                     ->default('Global')
                     ->badge()
+                     ->weight('bold')
                     ->color(fn (mixed $state): string => str($state)->contains('Global') ? 'gray' : 'primary')
                     ->label(__('filament-shield::filament-shield.column.team'))
                     ->searchable()
                     ->visible(fn (): bool => static::shield()->isCentralApp() && Utils::isTenancyEnabled()),
                 TextColumn::make('permissions_count')
                     ->badge()
+                     ->weight('bold')
                     ->label(__('filament-shield::filament-shield.column.permissions'))
                     ->counts('permissions')
                     ->color('primary')
                     ->alignment('center'),
                 TextColumn::make('users_count')
                     ->badge()
+                    ->weight('bold')
                     ->label('Assigned Users') 
                     ->counts('users')
                     ->color('success')
                     ->alignment('center'),
                 TextColumn::make('updated_at')
+                     ->weight('bold')
                     ->label(__('filament-shield::filament-shield.column.updated_at'))
                     ->dateTime()
                     ->alignment('center'),

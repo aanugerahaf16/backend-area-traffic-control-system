@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import dynamic from 'next/dynamic'
 import Link from "next/link"
 import { useParams } from "next/navigation"
@@ -52,41 +52,80 @@ export default function RoomCctvsPage() {
     loadIcons();
   }, []);
 
-  // Load data only once on component mount - no automatic refreshing
-  useEffect(() => {
-    const fetchRoomAndCctvs = async () => {
-      try {
-        // Fetch room details
-        if (roomId && typeof roomId === 'string') {
-          const roomData = await getRoom(roomId)
-          setRoom(roomData)
-        }
-        
-        // Fetch CCTVs for this room
-        if (roomId && typeof roomId === 'string') {
-          const cctvsData = await getCctvsByRoom(roomId)
-          setCctvs(cctvsData)
-        }
-      } catch (error) {
-        console.error('Failed to fetch room or CCTVs:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    // Only fetch if we have a valid roomId
-    if (roomId && typeof roomId === 'string') {
-      // Use a small delay to ensure UI is ready before fetching data
-      const timer = setTimeout(() => {
-        fetchRoomAndCctvs()
-      }, 50);
+  // Load data with optional skipLoading for background refresh
+  const fetchRoomAndCctvs = useCallback(async (skipLoading = false) => {
+    try {
+      if (!skipLoading) setLoading(true)
       
-      return () => clearTimeout(timer);
-    } else {
-      // If no roomId, stop loading
-      setLoading(false)
+      // Fetch room details
+      if (roomId && typeof roomId === 'string') {
+        const roomData = await getRoom(roomId)
+        setRoom(roomData)
+      }
+      
+      // Fetch CCTVs for this room
+      if (roomId && typeof roomId === 'string') {
+        const cctvsData = await getCctvsByRoom(roomId)
+        setCctvs(cctvsData)
+      }
+    } catch (error) {
+      console.error('Failed to fetch room or CCTVs:', error)
+    } finally {
+      if (!skipLoading) setLoading(false)
     }
-  }, [roomId]) // Only re-fetch when roomId changes (which shouldn't happen)
+  }, [roomId])
+
+  // Initial fetch and Real-time WebSocket listener
+  useEffect(() => {
+    if (!roomId) {
+      setLoading(false)
+      return
+    }
+    
+    let isMounted = true;
+    
+    // Initial fetch
+    if (isMounted) {
+      fetchRoomAndCctvs();
+    }
+    
+    // WEBSOCKET: Listen for real-time updates for Room/CCTVs
+    const loadEcho = async () => {
+      const { initEcho } = await import('@/lib/echo');
+      const echo = initEcho();
+      
+      if (echo && isMounted) {
+        echo.channel('atcs-global')
+          .listen('.system.update', (payload: any) => {
+            if (!isMounted) return;
+            const { buildings: wsBuildings } = payload.data;
+            if (wsBuildings) {
+              // Traverse buildings and rooms to find the current room
+              for (const building of wsBuildings) {
+                const currentRoom = building.rooms?.find((r: any) => String(r.id) === String(roomId));
+                if (currentRoom) {
+                  setRoom(currentRoom);
+                  if (currentRoom.cctvs) {
+                    setCctvs(currentRoom.cctvs);
+                  }
+                  break;
+                }
+              }
+            }
+          });
+      }
+    };
+
+    loadEcho();
+    
+    return () => {
+      isMounted = false;
+      import('@/lib/echo').then(({ initEcho }) => {
+        const echo = initEcho();
+        if (echo) echo.leaveChannel('atcs-global');
+      });
+    };
+  }, [roomId, fetchRoomAndCctvs]) // Only re-fetch when roomId changes (which shouldn't happen)
 
   const filteredCctvs = cctvs.filter((c) => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -204,14 +243,14 @@ export default function RoomCctvsPage() {
 
   return (
     // Fixed background gradient to ensure full width and proper height
-    <main className="bg-gradient-to-br from-blue-950 via-slate-900 to-blue-900 py-8 min-h-screen w-full">
+    <main className="bg-linear-to-br from-blue-950 via-slate-900 to-blue-900 py-8 min-h-screen w-full">
       {/* Header - responsive design */}
       <div className="pt-4 pb-6 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href={`/playlist/${buildingId}`} className="text-blue-300 hover:text-white transition p-2">
             {icons.ArrowLeft && <icons.ArrowLeft size={20} className="md:w-6 md:h-6" />}
           </Link>
-          <h1 className="text-2xl md:text-3xl font-semibold text-white truncate text-center flex-grow mx-4">
+          <h1 className="text-2xl md:text-3xl font-semibold text-white truncate text-center grow mx-4">
             {room ? room.name : 'Playlist'}
           </h1>
           <div className="w-8 md:w-6"></div> {/* Spacer to balance the layout */}
@@ -269,7 +308,7 @@ export default function RoomCctvsPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleLiveStream(cctv)}
-                    className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    className="flex-1 bg-linear-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                   >
                     {icons.Play && <icons.Play size={16} />}
                     <span className="text-sm">LIVE STREAM</span>
@@ -300,7 +339,7 @@ export default function RoomCctvsPage() {
             </div>
 
             {/* Video Player - responsive aspect ratio */}
-            <div ref={videoPlayerRef} className="aspect-video bg-black/50 flex items-center justify-center flex-grow relative">
+            <div ref={videoPlayerRef} className="aspect-video bg-black/50 flex items-center justify-center grow relative">
               {streamData && streamData.stream_url ? (
                 <video 
                   ref={videoRef}
@@ -345,7 +384,7 @@ export default function RoomCctvsPage() {
               <div className="flex gap-2">
                 <button 
                   onClick={handleFullscreen}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm"
+                  className="flex-1 bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm"
                 >
                   Full Screen
                 </button>

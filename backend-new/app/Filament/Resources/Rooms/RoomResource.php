@@ -76,24 +76,29 @@ class RoomResource extends Resource
             ->columns([
                 TextColumn::make('position')
                     ->label('ID')
+                    ->weight('bold')
                     ->getStateUsing(function ($record, $rowLoop) {
                         return $rowLoop->iteration;
                     })
                     ->alignment('center'),
                 TextColumn::make('building.name')
                     ->label('Name Building')
+                    ->weight('bold')
                     ->searchable()
                     ->alignment('center'),
                 TextColumn::make('name')
                     ->label('Name Room')
+                    ->weight('bold')
                     ->searchable()
                     ->alignment('center'),
                 TextColumn::make('created_at')
                     ->dateTime()
+                    ->weight('bold')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->alignment('center'),
                 TextColumn::make('updated_at')
                     ->dateTime()
+                    ->weight('bold')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->alignment('center'),
             ])

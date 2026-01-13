@@ -52,6 +52,11 @@ class ProductionTrend extends Model
         return $this->belongsTo(Building::class);
     }
 
+      public function room()
+    {
+        return $this->belongsTo(room::class);
+    }
+
     public function cctv()
     {
         return $this->belongsTo(Cctv::class);

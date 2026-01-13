@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import dynamic from 'next/dynamic'
 import Link from "next/link"
 import { useParams } from "next/navigation" // Changed to useParams for App Router
@@ -44,35 +44,72 @@ export default function BuildingRoomsPage() {
     loadIcons();
   }, []);
 
-  // Load data only once on component mount - no automatic refreshing
-  useEffect(() => {
-    const fetchBuildingAndRooms = async () => {
-      try {
-        // Fetch building details
-        if (typeof buildingId === 'string') {
-          const buildingData = await getBuilding(buildingId)
-          setBuilding(buildingData)
-          
-          // Fetch rooms for this building
-          const roomsData = await getRoomsByBuilding(buildingId)
-          setRooms(roomsData)
-        }
-      } catch (error) {
-        console.error('Failed to fetch building or rooms:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (buildingId) {
-      // Use a small delay to ensure UI is ready before fetching data
-      const timer = setTimeout(() => {
-        fetchBuildingAndRooms()
-      }, 50);
+  // Load data with optional skipLoading for background refresh
+  const fetchBuildingAndRooms = useCallback(async (skipLoading = false) => {
+    try {
+      if (!skipLoading) setLoading(true)
       
-      return () => clearTimeout(timer);
+      // Fetch building details
+      if (typeof buildingId === 'string') {
+        const buildingData = await getBuilding(buildingId)
+        setBuilding(buildingData)
+        
+        // Fetch rooms for this building
+        const roomsData = await getRoomsByBuilding(buildingId)
+        setRooms(roomsData)
+      }
+    } catch (error) {
+      console.error('Failed to fetch building or rooms:', error)
+    } finally {
+      if (!skipLoading) setLoading(false)
     }
-  }, [buildingId]) // Only re-fetch when buildingId changes (which shouldn't happen)
+  }, [buildingId])
+
+  // Initial fetch and Real-time WebSocket listener
+  useEffect(() => {
+    if (!buildingId) return;
+    
+    let isMounted = true;
+    
+    // Initial fetch
+    if (isMounted) {
+      fetchBuildingAndRooms();
+    }
+    
+    // WEBSOCKET: Listen for real-time updates for Rooms in this Building
+    const loadEcho = async () => {
+      const { initEcho } = await import('@/lib/echo');
+      const echo = initEcho();
+      
+      if (echo && isMounted) {
+        echo.channel('atcs-global')
+          .listen('.system.update', (payload: any) => {
+            if (!isMounted) return;
+            const { buildings: wsBuildings } = payload.data;
+            if (wsBuildings) {
+              // Find the current building in the broadcasted data
+              const currentBuilding = wsBuildings.find((b: any) => String(b.id) === String(buildingId));
+              if (currentBuilding) {
+                setBuilding(currentBuilding);
+                if (currentBuilding.rooms) {
+                  setRooms(currentBuilding.rooms);
+                }
+              }
+            }
+          });
+      }
+    };
+
+    loadEcho();
+    
+    return () => {
+      isMounted = false;
+      import('@/lib/echo').then(({ initEcho }) => {
+        const echo = initEcho();
+        if (echo) echo.leaveChannel('atcs-global');
+      });
+    };
+  }, [buildingId, fetchBuildingAndRooms])
 
   const filteredRooms = rooms.filter((r: any) => 
     r.name && r.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -80,14 +117,14 @@ export default function BuildingRoomsPage() {
 
   return (
     // Fixed background gradient to ensure full width and proper height
-    <main className="bg-gradient-to-br from-blue-950 via-slate-900 to-blue-900 py-8 min-h-screen w-full">
+    <main className="bg-linear-to-br from-blue-950 via-slate-900 to-blue-900 py-8 min-h-screen w-full">
       {/* Header - responsive design */}
       <div className="pt-4 pb-6 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/playlist" className="text-blue-300 hover:text-white transition p-2">
             {icons.ArrowLeft && <icons.ArrowLeft size={20} className="md:w-6 md:h-6" />}
           </Link>
-          <h1 className="text-2xl md:text-3xl font-semibold text-white truncate text-center flex-grow mx-4">
+          <h1 className="text-2xl md:text-3xl font-semibold text-white truncate text-center grow mx-4">
             {building ? building.name : 'Building Rooms'}
           </h1>
           <div className="w-8 md:w-6"></div> {/* Spacer to balance the layout */}

@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware([PerformanceMonitor::class, Cors::class])->group(function () {
     // Fast API endpoints with aggressive caching
     Route::get('/stats', [StatsController::class, 'index'])->name('api.stats.index');
+    Route::get('/dashboard-bundle', [\App\Http\Controllers\Api\DashboardBundleController::class, 'index'])->name('api.dashboard-bundle');
     Route::get('/contact', [ContactController::class, 'index'])->name('api.contact.index');
 
     // Production Trends API endpoint

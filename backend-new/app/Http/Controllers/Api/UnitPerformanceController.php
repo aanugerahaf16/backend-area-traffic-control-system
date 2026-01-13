@@ -14,13 +14,16 @@ class UnitPerformanceController extends BaseApiController
         $this->unitPerformanceService = $unitPerformanceService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $data = $this->unitPerformanceService->getUnitPerformance();
+            $startDate = $request->query('start_date');
+            $endDate = $request->query('end_date');
+            
+            $data = $this->unitPerformanceService->getUnitPerformance($startDate, $endDate);
             // For sample data, return directly without using ChartResource
             // Ensure fast JSON response
-            return $this->success($this->optimizeData(request(), $data), 'Unit performance data retrieved successfully');
+            return $this->success($this->optimizeData($request, $data), 'Unit performance data retrieved successfully');
         } catch (\Exception $e) {
             return $this->error('Failed to retrieve unit performance data: ' . $e->getMessage(), 500);
         }

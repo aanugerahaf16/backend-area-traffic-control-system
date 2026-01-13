@@ -88,6 +88,7 @@ class BuildingResource extends Resource
             ->columns([
                 TextColumn::make('position')
                     ->label('ID')
+                    ->weight('bold')
                     ->getStateUsing(function ($record, $rowLoop) {
                         return $rowLoop->iteration;
                     })
@@ -95,14 +96,12 @@ class BuildingResource extends Resource
                 TextColumn::make('name')
                     ->searchable()
                     ->alignment('center')
-                    ->weight('bold')
-                    ->color('primary'),
-
-
+                    ->weight('bold'),
                 TextColumn::make('latitude')
                     ->label('Latitude')
                     ->searchable()
                     ->toggleable()
+                     ->weight('bold')
                     ->alignment('center')
                     ->formatStateUsing(fn ($state): string => \App\Utils\CoordinateConverter::formatCoordinate($state, 8))
                     ->tooltip(function ($state, $record): string {
@@ -114,6 +113,7 @@ class BuildingResource extends Resource
                     ->label('Longitude')
                     ->searchable()
                     ->toggleable()
+                     ->weight('bold')
                     ->alignment('center')
                     ->formatStateUsing(fn ($state): string => \App\Utils\CoordinateConverter::formatCoordinate($state, 8))
                     ->tooltip(function ($state, $record): string {
@@ -124,16 +124,19 @@ class BuildingResource extends Resource
                 TextColumn::make('marker_icon_url')
                     ->searchable()
                     ->toggleable()
+                     ->weight('bold')
                     ->formatStateUsing(fn ($state): string => $state ?? 'Using default icon')
                     ->url(fn ($record) => $record->marker_icon_url)
                     ->openUrlInNewTab()
                     ->alignment('center'),
                 TextColumn::make('created_at')
                     ->dateTime()
+                     ->weight('bold')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->alignment('center'),
                 TextColumn::make('updated_at')
                     ->dateTime()
+                     ->weight('bold')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->alignment('center'),
             ])

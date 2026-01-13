@@ -67,28 +67,35 @@ class ContactResource extends Resource
             ->columns([
                 TextColumn::make('position')
                     ->label('ID')
+                     ->weight('bold')
                     ->getStateUsing(function ($record, $rowLoop) {
                         return $rowLoop->iteration;
                     })
                     ->alignment('center'),
                 TextColumn::make('email')
                     ->searchable()
+                     ->weight('bold')
                     ->alignment('center'),
                 TextColumn::make('phone')
                     ->searchable()
+                     ->weight('bold')
                     ->alignment('center'),
                 TextColumn::make('instagram')
                     ->searchable()
+                     ->weight('bold')
                     ->alignment('center'),
                 TextColumn::make('address')
                     ->searchable()
+                     ->weight('bold')
                     ->alignment('center'),
                 TextColumn::make('created_at')
                     ->dateTime()
+                     ->weight('bold')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->alignment('center'),
                 TextColumn::make('updated_at')
                     ->dateTime()
+                     ->weight('bold')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->alignment('center'),
             ])
