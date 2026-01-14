@@ -60,16 +60,11 @@ return [
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-                PDO::ATTR_PERSISTENT => true, // Enable persistent connections for better performance
-                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true, // Enable buffered queries
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_SILENT, // Reduce error handling overhead
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ, // Use objects for better performance
-                PDO::MYSQL_ATTR_INIT_COMMAND => "SET SESSION sql_mode='STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'",
-                PDO::ATTR_TIMEOUT => 1, // 1 second timeout for faster failures
-                PDO::MYSQL_ATTR_FOUND_ROWS => true, // Enable FOUND_ROWS for stateful operations
-                PDO::ATTR_EMULATE_PREPARES => false, // Use real prepared statements
-                PDO::MYSQL_ATTR_DIRECT_QUERY => true, // Enable direct queries
-            ]) : []
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => env('DB_SSL_VERIFY', false),
+                PDO::ATTR_PERSISTENT => true,
+                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ]) : [],
         ],
 
         'pgsql' => [
